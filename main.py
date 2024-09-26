@@ -65,11 +65,27 @@ class YandexDisk:
             return f'Ошибка удаления файла с Яндекс.Диска {response.status_code}'
 
 
+
+def file_date(filename:str) -> datetime.datetime:
+    """Функция для получения даты крайнего изменения файла."""
+    ctime = os.stat(filename).st_ctime
+    time_change_file = datetime.datetime.fromtimestamp(ctime)
+    return time_change_file.strftime('%Y-%m-%d %H:%M:%S')
+
+
 if __name__ == '__main__':
 
-    print(os. listdir())
+    print(os.listdir('.'))
 
-    #a = YandexDisk(token=TOKEN, yandex_dir=yandex_dir, headers=headers)
-    #a.get_dir()
+    print(file_date('test.txt'))
+
+
+
+
+
+
+    a = YandexDisk(token=TOKEN, yandex_dir=yandex_dir, headers=headers)
+    print(a.get_dir()[0]['modified'])
+
     #a.upload_file(file='test.txt')
     #a.delete_file(file='test.txt')
