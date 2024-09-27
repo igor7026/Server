@@ -29,13 +29,13 @@ class YandexDisk:
         self.yandex_dir = yandex_dir
         self.headers = headers
 
-    def get_dir(self):
+    def get_info_files(self):
         """Получение списка файлов в указанной папке."""
         response= requests.get(f"{URL}?path={self.yandex_dir}&fields=_embedded.items.name, _embedded.items.modified", headers=self.headers)
         if response.status_code == 200:
             res = response.json()
             logger.info(f'Получение списка файлов в облачном хранилище в папке {self.yandex_dir}')
-            print(res['_embedded']['items'])
+            print(res)
             return res['_embedded']['items']
         return
 
@@ -45,7 +45,7 @@ class YandexDisk:
         if response.status_code == 200:
             link = response.json()['href']
             print(link)
-            with open(file, 'rb') as f:
+            with open(os.path.join(local_dir,file), 'rb') as f:
                 files = {'file': f}
                 res = requests.put(link, files=files)
                 if res.status_code == 201:
@@ -66,26 +66,49 @@ class YandexDisk:
 
 
 
-def file_date(filename:str) -> datetime.datetime:
+def file_date(path:str) -> datetime.datetime:
     """Функция для получения даты крайнего изменения файла."""
-    ctime = os.stat(filename).st_ctime
+    ctime = os.stat(path).st_ctime
     time_change_file = datetime.datetime.fromtimestamp(ctime)
-    return time_change_file.strftime('%Y-%m-%d %H:%M:%S')
+    return time_change_file
 
 
 if __name__ == '__main__':
 
-    print(os.listdir('.'))
-
-    print(file_date('test.txt'))
-
-
-
-
-
-
     a = YandexDisk(token=TOKEN, yandex_dir=yandex_dir, headers=headers)
-    print(a.get_dir()[0]['modified'])
 
-    #a.upload_file(file='test.txt')
-    #a.delete_file(file='test.txt')
+
+ # Создание словаря с информацией о файлах на компьютере (имя: str; дата изменения: datetime)
+    local_files = {}
+    for file in os.listdir(local_dir):
+        local_files[file] = file_date(os.path.join(local_dir, file))
+    print('Local', local_files)
+
+
+# Создание словаря с информацией о файлах на Яндекс.Диске (имя: str; дата изменения: datetime)
+    disk_files = {}
+    for file in a.get_info_files():
+        disk_files[file['name']] = datetime.datetime.strptime(file['modified'][:-6], '%Y-%m-%dT%H:%M:%S')
+    print('Disk', disk_files)
+
+    for file in disk_files:
+        if file not in local_files:
+            print(f'Файл {file} отсутствует на компьютере')
+            a.delete_file(file=file)
+        elif local_files[file] > disk_files[file]:
+                print(f'Файл {file} на компьютере был изменен после последнего загрузки на Яндекс.Диск')
+                a.upload_file(file=file, overwrite=True)
+                del local_files[file]
+
+
+    if len(local_files) == 0:
+        print('Все файлы на компьютере были загружены на Яндекс.Диск')
+    else:
+        for file in local_files:
+            print(f'Файл {file} отсутствует на Яндекс.Диске')
+            a.upload_file(file=file)
+
+
+
+
+
