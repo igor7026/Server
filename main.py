@@ -3,7 +3,7 @@ import pytz
 import requests
 import os
 import datetime
-import logging
+from loguru import logger
 
 from setup_config import config_install
 
@@ -18,9 +18,8 @@ local_dir = config.get('Settings', 'path_to_dir_local')
 yandex_dir = config.get('Settings', 'name_dir_disk_yandex')
 path_log = config.get('Settings', 'path_to_file_log')
 
+logger.add(path_log)
 
-logging.basicConfig(level='INFO', format='%(asctime)s - %(levelname)s - %(message)s', filename=path_log)
-logger = logging.getLogger(__name__)
 
 
 URL = 'https://cloud-api.yandex.net/v1/disk/resources'
@@ -78,17 +77,13 @@ def file_date(path:str) -> datetime.datetime:
 
 if __name__ == '__main__':
 
-
-
     a = YandexDisk(token=TOKEN, yandex_dir=yandex_dir, headers=headers)
-
 
  # Создание словаря с информацией о файлах на компьютере (имя: str; дата изменения: datetime)
     local_files = {}
     for file in os.listdir(local_dir):
         local_files[file] = file_date(os.path.join(local_dir, file))
     print('Local', local_files)
-
 
 # Создание словаря с информацией о файлах на Яндекс.Диске (имя: str; дата изменения: datetime)
     disk_files = {}

@@ -1,6 +1,7 @@
 import os
 import requests
 
+from loguru import logger
 
 
 class YandexDisk:
@@ -14,6 +15,7 @@ class YandexDisk:
         if response.status_code == 200:
             res = response.json()
             return res['_embedded']['items']
+        logger.warning(f'Список файлов с хранилища сервера недоступен. Ошибка  сервера: {response.status_code}')
         return
 
     def upload_file(self, url, headers, file, local_dir, overwrite=False):
@@ -26,17 +28,21 @@ class YandexDisk:
                 files = {'file': f}
                 res = requests.put(link, files=files)
                 if res.status_code == 201:
-                    return f"Файл {file} успешно загружен на Яндекс.Диск"
+                    return
                 else:
-                    return f'Ошибка загрузки файла на Яндекс.Диск {res.status_code}'
+                    logger.warning(f'Файл {file}  незагружен в хранилище сервера. Ошибка  сервера: {response.status_code}')
+                    return
 
         else:
-            return f'Ошибка загрузки файла на Яндекс.Диск {response.status_code}'
+            logger.warning(f'Файл {file}  незагружен в хранилище сервера. Ошибка  сервера: {response.status_code}')
+            return
 
     def delete_file(self, url, headers,file):
         """Удаление файла с Яндекс.Диска."""
         response = requests.delete(f'{url}?path={self.yandex_dir}/{file}', headers=headers)
         if response.status_code == 204:
-            return f"Файл {file} успешно удален с Яндекс.Диска"
+            return
         else:
-            return f'Ошибка удаления файла с Яндекс.Диска {response.status_code}'
+            logger.warning(f'Файл {file}  неудален из хранилища сервера. Ошибка  сервера: {response.status_code}')
+            return
+

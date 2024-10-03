@@ -3,7 +3,8 @@ import time
 import pytz
 import os
 import datetime
-import logging
+
+from loguru import logger
 
 from yandex_disk import YandexDisk
 from setup_config import config_install
@@ -20,10 +21,9 @@ LOCAL_DIR = config.get('Settings', 'path_to_dir_local')
 SERVER_DIR = config.get('Settings', 'name_dir_disk_yandex')
 PATH_LOG = config.get('Settings', 'path_to_file_log')
 
-# Логгер
-
-logging.basicConfig(level='INFO', format='%(asctime)s - %(levelname)s - %(message)s', filename=PATH_LOG)
-logger = logging.getLogger(__name__)
+#Настройка логгера
+logger.remove()
+logger.add(PATH_LOG)
 
 # Сервер
 URL = 'https://cloud-api.yandex.net/v1/disk/resources'
@@ -73,8 +73,6 @@ def synchronized(local_files: dict[str,datetime.datetime], server_files: dict[st
 
 if __name__ == '__main__':
 
-    open(PATH_LOG, 'a').close()
-
 # Создание объекта для работы с Яндекс.Диском
     a = YandexDisk(token=TOKEN, yandex_dir=SERVER_DIR)
 
@@ -92,6 +90,8 @@ if __name__ == '__main__':
         print(f'Ошибка получения списка файлов в облачном хранилище   из-за неправильного токена {TOKEN}.\n\
 Проверьте правильность ввода токена для инициализации конфигурационного файла')
         exit(1)
+    except Exception as e:
+        print(f'Ошибка получения списка файлов в облачном хранилище из-за {e}.')
 
     logger.info(f'Начинаем работу с Яндекс.Диском. Папка синхронизации - {LOCAL_DIR}')
     synchronized(local_files=local_files, server_files=server_files)
