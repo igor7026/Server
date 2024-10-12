@@ -39,16 +39,24 @@ def file_date(path:str) -> datetime.datetime:
 def local_dir_dict(local_dir:str) -> dict[str, datetime.datetime]:
     """Функция для создания словаря с информацией о файлах на компьютере (имя: str; дата изменения: datetime)"""
     local_files = {}
-    for file in os.listdir(local_dir):
-        local_files[file] = file_date(os.path.join(local_dir, file))
-    return local_files
+    if os.path.isdir(local_dir):
+        for file in os.listdir(local_dir):
+            local_files[file] = file_date(os.path.join(local_dir, file))
+        return local_files
+    else:
+        print(f'Папка {local_dir} не найдена')
+        return None
 
 def server_dir_dict(url: str, headers: str) -> dict[str, datetime.datetime]:
     """Функция для создания словаря с информацией о файлах на Яндекс.Диске (имя: str; дата изменения: datetime)"""
     disk_files = {}
-    for file in a.get_info_files(url=url, headers=headers):
-        disk_files[file['name']] = datetime.datetime.strptime(file['modified'], '%Y-%m-%dT%H:%M:%S%z')
-    return disk_files
+    if a.get_info_files(url=url, headers=headers) is not None:
+        for file in a.get_info_files(url=url, headers=headers):
+            disk_files[file['name']] = datetime.datetime.strptime(file['modified'], '%Y-%m-%dT%H:%M:%S%z')
+        return disk_files
+    else:
+        print(f'Ошибка получения списка файлов в облачном хранилище.')
+        return None
 
 def synchronized(local_files: dict[str,datetime.datetime], server_files: dict[str, datetime.datetime]) -> None:
     for file in server_files:
@@ -79,6 +87,7 @@ if __name__ == '__main__':
 # Проверка создания словарей с информацией о файлах на компьютере и на Яндекс.Диске (имя: str; дата изменения: datetime)
 
     try:
+
         local_files = local_dir_dict(LOCAL_DIR)
         server_files = server_dir_dict(url=URL, headers=HEADERS)
 
@@ -92,18 +101,34 @@ if __name__ == '__main__':
         exit(1)
     except Exception as e:
         print(f'Ошибка получения списка файлов в облачном хранилище из-за {e}.')
+        exit(1)
 
     logger.info(f'Начинаем работу с Яндекс.Диском. Папка синхронизации - {LOCAL_DIR}')
     synchronized(local_files=local_files, server_files=server_files)
 
     while True:
 # Проверка наличия и соответствия файлов на Яндекс.Диске и на компьютере
-        time.sleep(10)
-        local_files = local_dir_dict(LOCAL_DIR)
-        disk_files = server_dir_dict(url=URL, headers=HEADERS)
-        synchronized(local_files=local_files, server_files=server_files)
+        time.sleep(30)
 
-        break
+        if local_dir_dict(LOCAL_DIR) is not None:
+            local_files = local_dir_dict(LOCAL_DIR)
+            print('1', local_files)
+        else:
+            continue
+
+        if server_dir_dict(url=URL, headers=HEADERS) is not None:
+            disk_files = server_dir_dict(url=URL, headers=HEADERS)
+            print('2', disk_files)
+        else:
+            continue
+        try:
+            synchronized(local_files=local_files, server_files=server_files)
+        except Exception as e:
+            logger.error(f'Ошибка синхронизации: {e}')
+            continue
+
+
+        # break
 
 
     logger.info('Завершение работы с Яндекс.Диском')
