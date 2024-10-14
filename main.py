@@ -3,6 +3,7 @@ import time
 import pytz
 import os
 import datetime
+from datetime import timezone
 
 from loguru import logger
 
@@ -24,6 +25,8 @@ PATH_LOG = config.get('Settings', 'path_to_file_log')
 #Настройка логгера
 logger.remove()
 logger.add(PATH_LOG)
+
+
 
 # Сервер
 URL = 'https://cloud-api.yandex.net/v1/disk/resources'
@@ -63,23 +66,29 @@ def synchronized(local_files: dict[str,datetime.datetime], server_files: dict[st
         if file not in local_files:
             a.delete_file(url=URL, headers=HEADERS, file=file)
             logger.info(f'Файл {file} удален на Яндекс.Диске')
+            print(100, local_files)
         elif local_files[file] > server_files[file]:
             print(f'Файл {file} на компьютере был изменен после последней загрузки на Яндекс.Диск')
             a.upload_file(url=URL, headers=HEADERS, local_dir=LOCAL_DIR, file=file, overwrite=True)
             del local_files[file]
             logger.info(f'Файл {file} перезаписан на Яндекс.Диск')
+            print(200, local_files)
         elif local_files[file] < server_files[file]:
             del local_files[file]
+            print(300, local_files)
     if len(local_files) == 0:
         logger.info('Синхронизация завершена')
+        print(400, local_files)
     else:
         for file in local_files:
             a.upload_file(url=URL, headers=HEADERS, local_dir=LOCAL_DIR, file=file)
             logger.info(f'Файл {file} записан на Яндекс.Диск')
+        print(500)
         logger.info('Синхронизация завершена')
 
 
 if __name__ == '__main__':
+
 
 # Создание объекта для работы с Яндекс.Диском
     a = YandexDisk(token=TOKEN, yandex_dir=SERVER_DIR)
@@ -89,7 +98,9 @@ if __name__ == '__main__':
     try:
 
         local_files = local_dir_dict(LOCAL_DIR)
+        print('11', local_files)
         server_files = server_dir_dict(url=URL, headers=HEADERS)
+        print('22', server_files)
 
     except FileNotFoundError:
         print(f'Не существует папка синхронизации {LOCAL_DIR}.\n\
@@ -108,7 +119,7 @@ if __name__ == '__main__':
 
     while True:
 # Проверка наличия и соответствия файлов на Яндекс.Диске и на компьютере
-        time.sleep(30)
+        time.sleep(10)
 
         if local_dir_dict(LOCAL_DIR) is not None:
             local_files = local_dir_dict(LOCAL_DIR)

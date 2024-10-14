@@ -20,12 +20,14 @@ class YandexDisk:
 
     def upload_file(self, url, headers, file, local_dir, overwrite=False):
         """Загрузка файла на Яндекс.Диск."""
+        print('upload_file1')
         response = requests.get(f'{url}/upload?path={self.yandex_dir}/{file}&overwrite={overwrite}', headers=headers)
         link = response.json()['href']
 
         with open(os.path.join(local_dir,file), 'rb') as f:
             files = {'file': f}
             res = requests.put(link, files=files)
+            print('upload_file2')
 
 
 
