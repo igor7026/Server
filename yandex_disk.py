@@ -26,7 +26,7 @@ class YandexDisk:
 
         with open(os.path.join(local_dir,file), 'rb') as f:
             files = {'file': f}
-            res = requests.put(link, files=files)
+            requests.put(link, files=files)
             print('upload_file2')
 
 
@@ -34,6 +34,6 @@ class YandexDisk:
 
     def delete_file(self, url, headers,file):
         """Удаление файла с Яндекс.Диска."""
-        response = requests.delete(f'{url}?path={self.yandex_dir}/{file}', headers=headers)
+        requests.delete(f'{url}?path={self.yandex_dir}/{file}', headers=headers)
 
 
