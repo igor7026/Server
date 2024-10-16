@@ -26,8 +26,6 @@ PATH_LOG = config.get('Settings', 'path_to_file_log')
 logger.remove()
 logger.add(PATH_LOG)
 
-
-
 # Сервер
 URL = 'https://cloud-api.yandex.net/v1/disk/resources'
 HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': f'OAuth {TOKEN}'}
@@ -39,6 +37,7 @@ def file_date(path:str) -> datetime.datetime:
     time_change = datetime.datetime.fromtimestamp(ctime).astimezone(pytz.UTC)
     return time_change
 
+
 def local_dir_dict(local_dir:str) -> dict[str, datetime.datetime]:
     """Функция для создания словаря с информацией о файлах на компьютере (имя: str; дата изменения: datetime)"""
     local_files = {}
@@ -49,6 +48,7 @@ def local_dir_dict(local_dir:str) -> dict[str, datetime.datetime]:
     else:
         print(f'Папка {local_dir} не найдена')
         return None
+
 
 def server_dir_dict(url: str, headers: str) -> dict[str, datetime.datetime]:
     """Функция для создания словаря с информацией о файлах на Яндекс.Диске (имя: str; дата изменения: datetime)"""
@@ -66,24 +66,21 @@ def synchronized(local_files: dict[str,datetime.datetime], server_files: dict[st
         if file not in local_files:
             a.delete_file(url=URL, headers=HEADERS, file=file)
             logger.info(f'Файл {file} удален на Яндекс.Диске')
-            print(100, local_files)
         elif local_files[file] > server_files[file]:
             print(f'Файл {file} на компьютере был изменен после последней загрузки на Яндекс.Диск')
             a.upload_file(url=URL, headers=HEADERS, local_dir=LOCAL_DIR, file=file, overwrite=True)
             del local_files[file]
             logger.info(f'Файл {file} перезаписан на Яндекс.Диск')
-            print(200, local_files)
         elif local_files[file] < server_files[file]:
             del local_files[file]
-            print(300, local_files)
+
     if len(local_files) == 0:
         logger.info('Синхронизация завершена')
-        print(400, local_files)
     else:
         for file in local_files:
             a.upload_file(url=URL, headers=HEADERS, local_dir=LOCAL_DIR, file=file)
             logger.info(f'Файл {file} записан на Яндекс.Диск')
-        print(500)
+
         logger.info('Синхронизация завершена')
 
 
@@ -96,12 +93,8 @@ if __name__ == '__main__':
 # Проверка создания словарей с информацией о файлах на компьютере и на Яндекс.Диске (имя: str; дата изменения: datetime)
 
     try:
-
         local_files = local_dir_dict(LOCAL_DIR)
-        print('11', local_files)
         server_files = server_dir_dict(url=URL, headers=HEADERS)
-        print('22', server_files)
-
     except FileNotFoundError:
         print(f'Не существует папка синхронизации {LOCAL_DIR}.\n\
 Проверьте правильность ввода пути к папке синхронизации для инициализации конфигурационного файла')
@@ -123,13 +116,11 @@ if __name__ == '__main__':
 
         if local_dir_dict(LOCAL_DIR) is not None:
             local_files = local_dir_dict(LOCAL_DIR)
-            print('1', local_files)
         else:
             continue
 
         if server_dir_dict(url=URL, headers=HEADERS) is not None:
-            disk_files = server_dir_dict(url=URL, headers=HEADERS)
-            print('2', disk_files)
+            server_files = server_dir_dict(url=URL, headers=HEADERS)
         else:
             continue
         try:
@@ -140,8 +131,6 @@ if __name__ == '__main__':
 
 
         # break
-
-
     logger.info('Завершение работы с Яндекс.Диском')
 
 # Удаление файла конфигурации
