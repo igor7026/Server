@@ -11,10 +11,10 @@ def config_install():
     config = configparser.ConfigParser()
     config.add_section('Settings')
     config.set('Settings', 'token', token)
-    config.set('Settings', 'path_to_dir_local', '/home/igor/Документы')
-    config.set('Settings', 'name_dir_disk_yandex', 'temp')
-    config.set('Settings', 'period', '10')
-    config.set('Settings', 'path_to_file_log', 'log.log')
+    config.set('Settings', 'path_to_dir_local', '/home/user/Документы') # путь к директории на локальном компьютере
+    config.set('Settings', 'name_dir_disk_yandex', 'temp') # путь к директории в облачном хранилище
+    config.set('Settings', 'period', '10') # интервал в секундах
+    config.set('Settings', 'path_to_file_log', 'log.log') # путь к файлу лога
 
 # Сохранение конфигурации в файл
     with open('config.ini', 'w') as config_file:

@@ -3,7 +3,6 @@ import time
 import pytz
 import os
 import datetime
-from datetime import timezone
 
 from loguru import logger
 
@@ -21,6 +20,7 @@ TOKEN = config.get('Settings', 'token')
 LOCAL_DIR = config.get('Settings', 'path_to_dir_local')
 SERVER_DIR = config.get('Settings', 'name_dir_disk_yandex')
 PATH_LOG = config.get('Settings', 'path_to_file_log')
+PERIOD = int(config.get('Settings', 'period'))
 
 #Настройка логгера
 logger.remove()
@@ -62,6 +62,11 @@ def server_dir_dict(url: str, headers: str) -> dict[str, datetime.datetime]:
         return None
 
 def synchronized(local_files: dict[str,datetime.datetime], server_files: dict[str, datetime.datetime]) -> None:
+    """
+    Функция для синхронизации файлов на компьютере и на Яндекс.Диске
+    :param local_files:
+    :param server_files:
+    """
     for file in server_files:
         if file not in local_files:
             a.delete_file(url=URL, headers=HEADERS, file=file)
@@ -112,7 +117,7 @@ if __name__ == '__main__':
 
     while True:
 # Проверка наличия и соответствия файлов на Яндекс.Диске и на компьютере
-        time.sleep(10)
+        time.sleep(PERIOD)
 
         if local_dir_dict(LOCAL_DIR) is not None:
             local_files = local_dir_dict(LOCAL_DIR)
